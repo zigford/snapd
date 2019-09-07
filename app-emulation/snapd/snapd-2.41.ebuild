@@ -12,7 +12,7 @@ SRC_URI="https://github.com/snapcore/${PN}/releases/download/${PV}/${PN}_${PV}.v
 LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS="~amd64"
-IUSE=""
+IUSE="systemd"
 RESTRICT="primaryuri"
 
 MY_S="${S}/src/github.com/snapcore/${PN}"
@@ -46,6 +46,8 @@ DEPEND="${RDEPEND}
 	dev-python/docutils
 	sys-devel/gettext
 	sys-fs/xfsprogs"
+
+REQUIRED_USE="systemd"
 
 src_configure() {
 	debug-print-function $FUNCNAME "$@"
