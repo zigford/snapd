@@ -127,7 +127,7 @@ src_install() {
 		"/usr/lib64/snapd" \
 		"/usr/share/dbus-1/services" \
 		"/usr/share/polkit-1/actions" \
-		"/var/lib/snapd"
+		"/var/lib/snapd/apparmor/snap-confine"
 
 	exeinto "/usr/$(get_libdir)/${PN}"
 	doexe \
