@@ -1,0 +1,13 @@
+<repositories version="1.0">
+    <repo priority="-900" status="unofficial">
+        <name>snapd</name>
+        <description>overlay for canonicals snapd</description>
+        <homepage>https://github.com/zigford/snapd</homepage>
+        <owner>
+            <email>jesse@zigford.org</email>
+            <name>Jesse Harris</name>
+        </owner>
+        <source type="git">git://github.com/zigford/snapd.git</source>
+        <feed>https://github.com/zigford/snapd/commits/master.atom</feed>
+    </repo>
+</repositories>
