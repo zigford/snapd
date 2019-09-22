@@ -11,7 +11,7 @@ SRC_URI="https://github.com/snapcore/${PN}/releases/download/${PV}/${PN}_${PV}.v
 
 LICENSE="GPL-3"
 SLOT="0"
-KEYWORDS="~amd64"
+KEYWORDS="amd64"
 IUSE="systemd"
 RESTRICT="primaryuri"
 
@@ -183,7 +183,7 @@ pkg_postinst() {
 		einfo "Enable snapd snapd.socket and snapd.apparmor service, then reload the apparmor service to start using snapd"
 	else 
 		einfo ""
-		einfo "Apparmor needs to be enabled and configred as the default security"
+		einfo "Apparmor needs to be enabled and configured as the default security"
 		einfo "Ensure /etc/default/grub is updated to include:"
 		einfo "GRUB_CMDLINE_LINIX_DEFAULT=\"apparmor=1 security=apparmor\""
 		einfo "Then update grub, enable snapd, snapd.socket and snapd.apparmor and reboot"
