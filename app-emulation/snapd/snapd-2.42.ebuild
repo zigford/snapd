@@ -149,6 +149,7 @@ src_install() {
 	doins data/polkit/io.snapcraft.snapd.policy
 	doexe "${S}/bin"/snapd
 	doexe "${S}/bin"/snap-exec
+	doexe "${S}/bin"/snapctl
 	doexe "${S}/bin"/snap-update-ns
 	doexe "${S}/bin"/snap-seccomp ### missing libseccomp
 	doexe "${MY_S}/cmd/snapd-apparmor/snapd-apparmor"
