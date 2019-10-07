@@ -26,7 +26,6 @@ fi
 
 LICENSE="GPL-3"
 SLOT="0"
-KEYWORDS=""
 IUSE="systemd"
 RESTRICT="primaryuri strip"
 
