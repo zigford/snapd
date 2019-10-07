@@ -7,44 +7,22 @@ inherit bash-completion-r1 golang-base linux-info systemd git-r3
 
 DESCRIPTION="Service and tools for management of snap packages"
 HOMEPAGE="http://snapcraft.io/"
+
 MY_S="${S}/src/github.com/snapcore/${PN}"
-EGIT_REPO_URI="https://github.com/snapcore/${PN}.git"
-EGIT_BRANCH="master"
-EGIT_CHECKOUT_DIR="${MY_S}"
-EGIT_SUBMODULES=( '*' )
+
+if [[ ${PV} == "9999" ]]; then
+	EGIT_REPO_URI="https://github.com/snapcore/${PN}.git"
+	EGIT_BRANCH="master"
+	EGIT_CHECKOUT_DIR="${MY_S}"
+else
+	SRC_URI="https://github.com/snapcore/${PN}/releases/download/${PV}/${PN}_${PV}.vendor.tar.xz -> ${P}.tar.xz"
+fi
 
 LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS=""
 IUSE="systemd"
 RESTRICT="primaryuri"
-
-EGO_VENDOR=(
-	"github.com/coreos/go-systemd 39ca1b05acc7ad1220e09f133283b8859a8b71ab"
-	"github.com/godbus/dbus 4481cbc300e2df0c0b3cecc18b6c16c6c0bb885d"
-	"github.com/gorilla/mux d83b6ffe499a29cc05fc977988d0392851779620"
-	"github.com/jessevdk/go-flags 7309ec74f752d05ce2c62b8fd5755c4a2e3913cb"
-	"github.com/juju/ratelimit 59fac5042749a5afb9af70e813da1dd5474f0167"
-	"github.com/kr/pretty 73f6ac0b30a98e433b289500d779f50c1a6f0712"
-	"github.com/kr/text e2ffdb16a802fe2bb95e2e35ff34f0e53aeef34f"
-	"github.com/mvo5/goconfigparser 26426272dda20cc76aa1fa44286dc743d2972fe8"
-	"github.com/mvo5/libseccomp-golang f4de83b52afb3c19190eb65cc92429feaaf0e8b6"
-	"github.com/snapcore/bolt 9eca199504ee1299394669820724322b5bfc070a"
-	"github.com/snapcore/go-gettext 6598fb28bb07cb32298324b4958677c2f00cacd9"
-	"github.com/snapcore/squashfuse 319f6d41a0419465a55d9dcb848d2408b97764f9"
-	"golang.org/x/crypto 5ef0053f77724838734b6945dd364d3847e5de1d github.com/golang/crypto"
-	"golang.org/x/crypto a19fa444682e099bed1a53260e1d755754cd098a github.com/golang/crypto"
-	"golang.org/x/net c81e7f25cb61200d8bf0ae971a0bac8cb638d5bc github.com/golang/net"
-	"gopkg.in/check.v1 788fd78401277ebd861206a03c884797c6ec5541 github.com/go-check/check"
-	"gopkg.in/macaroon.v1 ab3940c6c16510a850e1c2dd628b919f0f3f1464 github.com/go-macaroon/macaroon"
-	"gopkg.in/mgo.v2 3f83fa5005286a7fe593b055f0d7771a7dce4655 github.com/go-mgo/mgo"
-	"gopkg.in/retry.v1 c09f6b86ba4d5d2cf5bdf0665364aec9fd4815db github.com/go-retry/retry"
-	"gopkg.in/tomb.v2 d5d1b5820637886def9eef33e03a27a9f166942c github.com/go-tomb/tomb"
-	"gopkg.in/tylerb/graceful.v1 50a48b6e73fcc75b45e22c05b79629a67c79e938 github.com/tylerb/graceful"
-	"gopkg.in/yaml.v2 86f5ed62f8a0ee96bd888d2efdfd6d4fb100a4eb github.com/go-yaml/yaml" )
-
-inherit golang-vcs-snapshot
-SRC_URI="${EGO_VENDOR_URI}"
 
 PKG_LINGUAS="am bs ca cs da de el en_GB es fi fr gl hr ia id it ja lt ms nb oc pt_BR pt ru sv tr ug zh_CN"
 
@@ -61,7 +39,7 @@ CONFIG_CHECK="	CGROUPS \
 		SECCOMP_FILTER \
 		SECURITY_APPARMOR"
 
-export GOPATH="${S}/${PN}"
+export GOPATH="${S}"
 
 EGO_PN="github.com/snapcore/${PN}"
 
@@ -76,19 +54,21 @@ DEPEND="${RDEPEND}
 	dev-python/docutils
 	sys-devel/gettext
 	sys-fs/xfsprogs
-	app-misc/jq"
+	dev-go/govendor"
 
 REQUIRED_USE="systemd"
 
 src_unpack() {
-	git-r3_src_unpack
-#	EGO_VENDOR=$(
-#	    jq -r '.package | .[] | .path + " " + .revision' \
-#			"${MY_S}/vendor/vendor.json" |
-#			tail -n +2
-#	)
-	golang-vcs-snapshot_src_unpack
+	if [[ ${PV} == "9999" ]]
+	then
+		git-r3_src_unpack
+		cd "${MY_S}"
+		govendor sync || die "Cannot update vendor"
+	else
+		default
+	fi
 }
+
 src_configure() {
 	debug-print-function $FUNCNAME "$@"
 
