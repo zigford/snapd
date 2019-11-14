@@ -130,6 +130,7 @@ src_compile() {
 	sed -e "s,[@]LIBEXECDIR[@],/usr/$(get_libdir)/snapd,g" \
 		-e 's,[@]SNAP_MOUNT_DIR[@],/snap,' \
 		-e "/snap-device-helper/s/lib/$(get_libdir)/" \
+		-e 's/libtinfo/libtinfo{,w}/' \
 		"${C}/snap-confine/snap-confine.apparmor.in" \
 		> "${C}/snap-confine/usr.lib.snapd.snap-confine.real"
 }
