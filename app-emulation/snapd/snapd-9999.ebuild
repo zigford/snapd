@@ -1,4 +1,4 @@
-# Copyright 1999-2018 Gentoo Foundation
+# Copyright 1999-2020 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
@@ -26,7 +26,7 @@ fi
 
 LICENSE="GPL-3"
 SLOT="0"
-IUSE="systemd"
+IUSE="systemd -doc +man"
 RESTRICT="primaryuri strip"
 
 PKG_LINGUAS="am bs ca cs da de el en_GB es fi fr gl hr ia id it ja lt ms nb oc pt_BR pt ru sv tr ug zh_CN"
@@ -56,12 +56,10 @@ RDEPEND="!sys-apps/snap-confine
 	sec-policy/apparmor-profiles"
 
 BDEPEND="${LIVE_DEPEND}
-	>=dev-lang/go-1.9"
-
-DEPEND="${RDEPEND}
-	dev-python/docutils
-	sys-devel/gettext
-	sys-fs/xfsprogs"
+	>=dev-lang/go-1.9
+	sys-fs/xfsprogs
+	man? ( dev-python/docutils )
+	sys-devel/gettext"
 
 REQUIRED_USE="systemd"
 
@@ -118,9 +116,11 @@ src_compile() {
 		    $VX "github.com/snapcore/${PN}/cmd/${I}"
 		test -f "${S}/bin/${I}" || die "Building ${I} failed"
 	done
-	"${S}/bin/snap" help --man > "${C}/snap/snap.1"
-	rst2man.py "${C}/snap-confine/"snap-confine.{rst,1}
-	rst2man.py "${C}/snap-discard-ns/"snap-discard-ns.{rst,5}
+	if use man ; then
+		"${S}/bin/snap" help --man > "${C}/snap/snap.1"
+		rst2man.py "${C}/snap-confine/"snap-confine.{rst,1}
+		rst2man.py "${C}/snap-discard-ns/"snap-discard-ns.{rst,5}
+	fi
 
 	for I in ${PKG_LINGUAS};do
 		einfo "go building: ${I}"
@@ -142,10 +142,12 @@ src_install() {
 	C="${MY_S}/cmd"
 	DS="${MY_S}/data/systemd"
 
-	doman \
-		"${C}/snap-confine/snap-confine.1" \
-		"${C}/snap/snap.1" \
-		"${C}/snap-discard-ns/snap-discard-ns.5"
+	if use man ; then
+		doman \
+			"${C}/snap-confine/snap-confine.1" \
+			"${C}/snap/snap.1" \
+			"${C}/snap-discard-ns/snap-discard-ns.5"
+	fi
 
 	systemd_dounit \
 		"${DS}/snapd.service" \
@@ -190,8 +192,10 @@ src_install() {
 	insinto "/etc/apparmor.d"
 	doins "${C}/snap-confine/usr.lib.snapd.snap-confine.real"
 	
-	dodoc	"${MY_S}/packaging/ubuntu-14.04"/copyright \
-		"${MY_S}/packaging/ubuntu-16.04"/changelog
+	if use doc ; then
+		dodoc \
+			"${MY_S}/packaging/ubuntu-16.04"/{copyright,changelog}
+	fi
 
 	dobin "${S}/bin"/{snap,snapctl}
 
