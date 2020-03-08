@@ -56,12 +56,10 @@ RDEPEND="!sys-apps/snap-confine
 	sec-policy/apparmor-profiles"
 
 BDEPEND="${LIVE_DEPEND}
-	>=dev-lang/go-1.9"
-
-DEPEND="${RDEPEND}
-	dev-python/docutils
-	sys-devel/gettext
-	sys-fs/xfsprogs"
+	>=dev-lang/go-1.9
+	sys-fs/xfsprogs
+	man? ( dev-python/docutils )
+	sys-devel/gettext"
 
 REQUIRED_USE="systemd"
 
