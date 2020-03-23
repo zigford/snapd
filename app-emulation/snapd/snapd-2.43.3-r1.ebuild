@@ -1,21 +1,34 @@
-# Copyright 1999-2018 Gentoo Foundation
+# Copyright 1999-2020 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=6
+EAPI=7
 
-inherit bash-completion-r1 golang-base golang-vcs-snapshot linux-info systemd
+inherit bash-completion-r1 golang-base linux-info systemd
 
 DESCRIPTION="Service and tools for management of snap packages"
 HOMEPAGE="http://snapcraft.io/"
-SRC_URI="https://github.com/snapcore/${PN}/releases/download/${PV}/${PN}_${PV}.vendor.tar.xz -> ${P}.tar.xz"
+
+MY_S="${S}/src/github.com/snapcore/${PN}"
+
+if [[ ${PV} == 9999 ]]; then
+	inherit git-r3
+	EGIT_REPO_URI="https://github.com/snapcore/${PN}.git"
+	EGIT_BRANCH="master"
+	EGIT_CHECKOUT_DIR="${MY_S}"
+	LIVE_DEPEND="dev-go/govendor"
+	KEYWORDS=""
+else
+	inherit golang-vcs-snapshot
+	SRC_URI="https://github.com/snapcore/${PN}/releases/download/${PV}/${PN}_${PV}.vendor.tar.xz -> ${P}.tar.xz"
+	MY_PV=${PV}
+	KEYWORDS="~amd64"
+fi
 
 LICENSE="GPL-3"
 SLOT="0"
-KEYWORDS="amd64"
-IUSE="systemd"
-RESTRICT="primaryuri"
+IUSE="systemd -doc +man"
+RESTRICT="primaryuri strip"
 
-MY_S="${S}/src/github.com/snapcore/${PN}"
 PKG_LINGUAS="am bs ca cs da de el en_GB es fi fr gl hr ia id it ja lt ms nb oc pt_BR pt ru sv tr ug zh_CN"
 
 CONFIG_CHECK="	CGROUPS \
@@ -31,7 +44,7 @@ CONFIG_CHECK="	CGROUPS \
 		SECCOMP_FILTER \
 		SECURITY_APPARMOR"
 
-export GOPATH="${S}/${PN}"
+export GOPATH="${S}"
 
 EGO_PN="github.com/snapcore/${PN}"
 
@@ -41,15 +54,28 @@ RDEPEND="!sys-apps/snap-confine
 	dev-libs/glib
 	sys-fs/squashfs-tools:*
 	sec-policy/apparmor-profiles"
-DEPEND="${RDEPEND}
+
+BDEPEND="${LIVE_DEPEND}
 	>=dev-lang/go-1.9
-	dev-python/docutils
-	sys-devel/gettext
-	sys-fs/xfsprogs"
+	sys-fs/xfsprogs
+	man? ( dev-python/docutils )
+	sys-devel/gettext"
 
 REQUIRED_USE="systemd"
 
+src_unpack() {
+	if [[ ${PV} == 9999 ]]
+	then
+		git-r3_src_unpack
+		cd "${MY_S}"
+		govendor sync || die "Cannot update vendor"
+	else
+		golang-vcs-snapshot_src_unpack
+	fi
+}
+
 src_configure() {
+	[[ ${PV} == 9999 ]] && MY_PV=$(date +%Y.%m.%d)
 	debug-print-function $FUNCNAME "$@"
 
 	cd "${MY_S}/cmd/"
@@ -57,11 +83,11 @@ src_configure() {
 package cmd
 
 func init() {
-        Version = "${PV}"
+        Version = "${MY_PV}"
 }
 EOF
-	echo "${PV}" > "${MY_S}/cmd/VERSION"
-	echo "VERSION=${PV}" > "${MY_S}/data/info"
+	echo "${MY_PV}" > "${MY_S}/cmd/VERSION"
+	echo "VERSION=${MY_PV}" > "${MY_S}/data/info"
 
 	test -f configure.ac	# Sanity check, are we in the right directory?
 	rm -f config.status
@@ -83,19 +109,21 @@ src_compile() {
 	# Generate snapd-apparmor systemd unit
 	emake -C "${MY_S}/data/systemd"
 
-	export GOPATH="${S}/"
 	VX="-v -x" # or "-v -x" for verbosity
 	for I in snapctl snap-exec snap snapd snap-seccomp snap-update-ns; do
 		einfo "go building: ${I}"
 		go install --ldflags '-extldflags "-Wl,--build-id=sha1"' \
 		    $VX "github.com/snapcore/${PN}/cmd/${I}"
+		test -f "${S}/bin/${I}" || die "Building ${I} failed"
 	done
-	"${S}/bin/snap" help --man > "${C}/snap/snap.1"
-	rst2man.py "${C}/snap-confine/"snap-confine.{rst,1}
-	rst2man.py "${C}/snap-discard-ns/"snap-discard-ns.{rst,5}
+	if use man ; then
+		"${S}/bin/snap" help --man > "${C}/snap/snap.1"
+		rst2man.py "${C}/snap-confine/"snap-confine.{rst,1}
+		rst2man.py "${C}/snap-discard-ns/"snap-discard-ns.{rst,5}
+	fi
 
 	for I in ${PKG_LINGUAS};do
-		einfo "mo building: ${I}"
+		einfo "go building: ${I}"
 		msgfmt -v --output-file="${MY_S}/po/${I}.mo" "${MY_S}/po/${I}.po"
 	done
 
@@ -103,6 +131,7 @@ src_compile() {
 	sed -e "s,[@]LIBEXECDIR[@],/usr/$(get_libdir)/snapd,g" \
 		-e 's,[@]SNAP_MOUNT_DIR[@],/snap,' \
 		-e "/snap-device-helper/s/lib/$(get_libdir)/" \
+		-e 's/libtinfo/libtinfo{,w}/' \
 		"${C}/snap-confine/snap-confine.apparmor.in" \
 		> "${C}/snap-confine/usr.lib.snapd.snap-confine.real"
 }
@@ -113,10 +142,12 @@ src_install() {
 	C="${MY_S}/cmd"
 	DS="${MY_S}/data/systemd"
 
-	doman \
-		"${C}/snap-confine/snap-confine.1" \
-		"${C}/snap/snap.1" \
-		"${C}/snap-discard-ns/snap-discard-ns.5"
+	if use man ; then
+		doman \
+			"${C}/snap-confine/snap-confine.1" \
+			"${C}/snap/snap.1" \
+			"${C}/snap-discard-ns/snap-discard-ns.5"
+	fi
 
 	systemd_dounit \
 		"${DS}/snapd.service" \
@@ -128,8 +159,8 @@ src_install() {
 		"/etc/profile.d" \
 		"/usr/lib64/snapd" \
 		"/usr/share/dbus-1/services" \
-		"/usr/share/polkit-1/actions" \
-		"/var/lib/snapd/apparmor/snap-confine"
+		"/usr/share/polkit-1/actions"
+	keepdir	"/var/lib/snapd/apparmor/snap-confine"
 
 	exeinto "/usr/$(get_libdir)/${PN}"
 	doexe \
@@ -161,8 +192,10 @@ src_install() {
 	insinto "/etc/apparmor.d"
 	doins "${C}/snap-confine/usr.lib.snapd.snap-confine.real"
 	
-	dodoc	"${MY_S}/packaging/ubuntu-14.04"/copyright \
-		"${MY_S}/packaging/ubuntu-16.04"/changelog
+	if use doc ; then
+		dodoc \
+			"${MY_S}/packaging/ubuntu-16.04"/{copyright,changelog}
+	fi
 
 	dobin "${S}/bin"/{snap,snapctl}
 

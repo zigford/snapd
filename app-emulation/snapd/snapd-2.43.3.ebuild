@@ -1,7 +1,7 @@
 # Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=6
+EAPI=7
 
 inherit bash-completion-r1 golang-base linux-info systemd
 
@@ -55,12 +55,13 @@ RDEPEND="!sys-apps/snap-confine
 	sys-fs/squashfs-tools:*
 	sec-policy/apparmor-profiles"
 
+BDEPEND="${LIVE_DEPEND}
+	>=dev-lang/go-1.9"
+
 DEPEND="${RDEPEND}
-	>=dev-lang/go-1.9
 	dev-python/docutils
 	sys-devel/gettext
-	sys-fs/xfsprogs
-	${LIVE_DEPEND}"
+	sys-fs/xfsprogs"
 
 REQUIRED_USE="systemd"
 
