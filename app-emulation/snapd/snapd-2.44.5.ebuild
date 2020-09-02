@@ -26,7 +26,7 @@ fi
 
 LICENSE="GPL-3"
 SLOT="0"
-IUSE="systemd -doc +man"
+IUSE="systemd -doc +man openrc"
 RESTRICT="primaryuri strip"
 
 PKG_LINGUAS="am bs ca cs da de el en_GB es fi fr gl hr ia id it ja lt ms nb oc pt_BR pt ru sv tr ug zh_CN"
@@ -59,9 +59,13 @@ BDEPEND="${LIVE_DEPEND}
 	>=dev-lang/go-1.9
 	sys-fs/xfsprogs
 	man? ( dev-python/docutils )
-	sys-devel/gettext"
+	systemd? ( sys-apps/systemd ) ( !sys-apps/openrc)
+	openrc? ( app-admin/openrc-settingsd) ( !sys-apps/systemd )
+	sys-devel/gettext
+	"
+#app-admin/openrc-settingsd openrc systemd unit runner 	
 
-REQUIRED_USE="systemd"
+#REQUIRED_USE="systemd"
 
 src_unpack() {
 	if [[ ${PV} == 9999 ]]
