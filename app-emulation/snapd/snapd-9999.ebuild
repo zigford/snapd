@@ -95,7 +95,8 @@ EOF
 		--libexecdir="/usr/$(get_libdir)/snapd" \
 		--enable-maintainer-mode \
 		--disable-silent-rules \
-		--enable-apparmor
+		--enable-apparmor \
+		--enable-nvidia-biarch
 }
 
 src_compile() {
