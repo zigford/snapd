@@ -21,7 +21,7 @@ else
 	inherit golang-vcs-snapshot
 	SRC_URI="https://github.com/snapcore/${PN}/releases/download/${PV}/${PN}_${PV}.vendor.tar.xz -> ${P}.tar.xz"
 	MY_PV=${PV}
-	KEYWORDS="~amd64"
+	KEYWORDS="amd64"
 fi
 
 LICENSE="GPL-3"
@@ -96,8 +96,7 @@ EOF
 		--libexecdir="/usr/$(get_libdir)/snapd" \
 		--enable-maintainer-mode \
 		--disable-silent-rules \
-		--enable-apparmor \
-		--enable-nvidia-biarch
+		--enable-apparmor
 }
 
 src_compile() {
