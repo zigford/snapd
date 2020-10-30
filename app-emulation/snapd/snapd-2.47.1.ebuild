@@ -52,7 +52,7 @@ RDEPEND="!sys-apps/snap-confine
 	sys-libs/libseccomp[static-libs]
 	sys-apps/apparmor
 	dev-libs/glib
-	sys-fs/squashfs-tools:*
+	sys-fs/squashfs-tools:*[lzo]
 	sec-policy/apparmor-profiles"
 
 BDEPEND="${LIVE_DEPEND}
