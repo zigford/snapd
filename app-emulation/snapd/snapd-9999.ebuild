@@ -78,16 +78,9 @@ src_configure() {
 	[[ ${PV} == 9999 ]] && MY_PV=$(date +%Y.%m.%d)
 	debug-print-function $FUNCNAME "$@"
 
-	cd "${MY_S}/cmd/"
-	cat <<EOF > "${MY_S}/cmd/version_generated.go"
-package cmd
-
-func init() {
-        Version = "${MY_PV}"
-}
-EOF
-	echo "${MY_PV}" > "${MY_S}/cmd/VERSION"
-	echo "VERSION=${MY_PV}" > "${MY_S}/data/info"
+	cd "${MY_S}"
+	./mkversion.sh "${PV}" 2> /dev/null
+	cd cmd
 
 	test -f configure.ac	# Sanity check, are we in the right directory?
 	rm -f config.status
@@ -164,9 +157,16 @@ src_install() {
 	keepdir	"/var/lib/snapd/apparmor/snap-confine"
 
 	exeinto "/usr/$(get_libdir)/${PN}"
+
+	# bash completions
 	doexe \
-			data/completion/etelpmoc.sh \
-			data/completion/complete.sh
+			data/completion/bash/etelpmoc.sh \
+			data/completion/bash/complete.sh
+
+	# zsh completions
+	insinto /usr/share/zsh/site-functions
+	doins data/completion/zsh/_snap
+
 	insinto "/usr/share/selinux/targeted/include/snapd/"
 	doins \
 			data/selinux/snappy.if \
@@ -200,7 +200,7 @@ src_install() {
 
 	dobin "${S}/bin"/{snap,snapctl}
 
-	dobashcomp data/completion/snap
+	dobashcomp data/completion/bash/snap
 
 	domo "${MY_S}/po"/*.mo
 

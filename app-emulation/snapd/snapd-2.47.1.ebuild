@@ -78,16 +78,9 @@ src_configure() {
 	[[ ${PV} == 9999 ]] && MY_PV=$(date +%Y.%m.%d)
 	debug-print-function $FUNCNAME "$@"
 
-	cd "${MY_S}/cmd/"
-	cat <<EOF > "${MY_S}/cmd/version_generated.go"
-package cmd
-
-func init() {
-        Version = "${MY_PV}"
-}
-EOF
-	echo "${MY_PV}" > "${MY_S}/cmd/VERSION"
-	echo "VERSION=${MY_PV}" > "${MY_S}/data/info"
+	cd "${MY_S}"
+	./mkversion.sh "${PV}" 2> /dev/null
+	cd cmd
 
 	test -f configure.ac	# Sanity check, are we in the right directory?
 	rm -f config.status
