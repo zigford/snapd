@@ -16,6 +16,7 @@ if [[ ${PV} == 9999 ]]; then
 	EGIT_BRANCH="master"
 	EGIT_CHECKOUT_DIR="${MY_S}"
 	LIVE_DEPEND="dev-go/govendor"
+	KEYWORDS=""
 else
 	inherit golang-vcs-snapshot
 	SRC_URI="https://github.com/snapcore/${PN}/releases/download/${PV}/${PN}_${PV}.vendor.tar.xz -> ${P}.tar.xz"
